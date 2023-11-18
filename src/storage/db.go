@@ -5,6 +5,6 @@ type Db interface {
 	Close()
 	Exec(string) error
 	Begin(string, []string) error
-	Query(string) (string, error)
+	Query(string) ([]string, error)
 	Prepare(string) (string, error)
 }
