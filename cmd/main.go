@@ -6,8 +6,10 @@ import (
 )
 
 func main() {
+	//var db storage.Db = &storage.Postgresql{}
 	var db storage.Db = &storage.Sqlite{}
 	err := db.Open("./tmp/sqlite.db")
+	//err := db.Open("user=mk host=localhost port=5432 dbname=postgres sslmode=disable")
 	if err != nil {
 		log.Fatal(err)
 	}
