@@ -9,24 +9,25 @@ import (
 )
 
 type Sqlite struct {
-	Db *sql.DB
+	db *sql.DB
 }
 
-func (s *Sqlite) Open() error {
-	db, err := sql.Open("sqlite3", "./foo.db")
+func (s *Sqlite) Open(d string) error {
+	log.Println("trying")
+	db, err := sql.Open("sqlite3", d)
 	if err != nil {
 		return err
 	}
-	s.Db = db
+	s.db = db
 	return nil
 }
 
 func (s *Sqlite) Close() {
-	s.Db.Close()
+	s.db.Close()
 }
 
 func (s *Sqlite) Exec(ss string) error {
-	_, err := s.Db.Exec(ss)
+	_, err := s.db.Exec(ss)
 	if err != nil {
 		log.Printf("%q: %s\n", err, ss)
 		return err
@@ -34,8 +35,8 @@ func (s *Sqlite) Exec(ss string) error {
 	return nil
 }
 
-func (s *Sqlite) Begin(ss string) error {
-	tx, err := s.Db.Begin()
+func (s *Sqlite) Begin(ss string, d []string) error {
+	tx, err := s.db.Begin()
 	if err != nil {
 		return err
 	}
@@ -46,12 +47,19 @@ func (s *Sqlite) Begin(ss string) error {
 	}
 	defer stmt.Close()
 
-	for i := 0; i < 100; i++ {
-		_, err = stmt.Exec(i, fmt.Sprintf("こんにちは世界%03d", i))
+	for i, v := range d {
+		_, err = stmt.Exec(i, fmt.Sprintf("%s%03d", v, i))
 		if err != nil {
 			return err
 		}
 	}
+
+	////for i := 0; i < 100; i++ {
+	////	_, err = stmt.Exec(i, fmt.Sprintf("こんにちは世界%03d", i))
+	////	if err != nil {
+	////		return err
+	////	}
+	////}
 
 	err = tx.Commit()
 	if err != nil {
@@ -60,10 +68,10 @@ func (s *Sqlite) Begin(ss string) error {
 	return nil
 }
 
-func (s *Sqlite) Query(ss string) error {
-	rows, err := s.Db.Query(ss)
+func (s *Sqlite) Query(ss string) (result []string, err error) {
+	rows, err := s.db.Query(ss)
 	if err != nil {
-		return err
+		return
 	}
 	defer rows.Close()
 	for rows.Next() {
@@ -71,28 +79,28 @@ func (s *Sqlite) Query(ss string) error {
 		var name string
 		err = rows.Scan(&id, &name)
 		if err != nil {
-			return err
+			return
 		}
-		fmt.Println(id, name)
+		result = append(result, fmt.Sprintf("%d %s", id, name))
 	}
 	err = rows.Err()
 	if err != nil {
-		return err
+		return
 	}
-	return nil
+	return
 }
 
-func (s *Sqlite) Prepare(ss string) error {
-	stmt, err := s.Db.Prepare(ss)
+func (s *Sqlite) Prepare(ss string) (result string, err error) {
+	stmt, err := s.db.Prepare(ss)
 	if err != nil {
-		return err
+		return
 	}
 	defer stmt.Close()
 	var name string
 	err = stmt.QueryRow("3").Scan(&name)
 	if err != nil {
-		return err
+		return
 	}
-	fmt.Println(name)
-	return nil
+	result = name
+	return
 }

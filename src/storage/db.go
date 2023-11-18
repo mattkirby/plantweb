@@ -1,10 +1,10 @@
 package storage
 
-type Storage interface {
-	Open() error
+type Db interface {
+	Open(string) error
 	Close()
 	Exec(string) error
-	Begin(string) error
-	Query(string) error
-	Prepare(string) error
+	Begin(string, []string) error
+	Query(string) (string, error)
+	Prepare(string) (string, error)
 }
